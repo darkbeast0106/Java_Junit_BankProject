@@ -12,8 +12,10 @@ public class Bank {
     // Egy létező számlára pénzt helyez
     public void egyenlegFeltolt(String szamlaszam, long osszeg)
     {
-        Szamla sz = szamlaList.stream()
-                .filter(szamla -> szamla.szamlaszam.equals(szamlaszam)).findFirst().get();
+        if (osszeg < 1){
+            throw new IllegalArgumentException("Az összeg nem lehet nulla vagy negatív");
+        }
+        Szamla sz = szamlaKeres(szamlaszam);
         long ujEgyenleg = sz.getEgyenleg() + osszeg;
         sz.setEgyenleg(ujEgyenleg);
     }
@@ -21,12 +23,31 @@ public class Bank {
     // Új számlát nyit a megadott névvel, számlaszámmal
     public void ujSzamla(String nev, String szamlaszam)
     {
+        if (nev.equals("")){
+            throw new IllegalArgumentException("A név nem lehet üres");
+        }
+        if (szamlaszam.equals("")){
+            throw new IllegalArgumentException("A számlaszám nem lehet üres");
+        }
         if(szamlaList.stream()
                 .anyMatch(szamla -> szamla.szamlaszam.equals(szamlaszam))){
             throw new IllegalArgumentException("A megadott számlaszámmal már létezik számla");
         }
         Szamla sz = new Szamla(nev, szamlaszam);
         szamlaList.add(sz);
+    }
+
+    private void ujSzamlaSzamlaKeresFuggvennyel(String nev, String szamlaszam){
+        if (nev.equals("")){
+            throw new IllegalArgumentException("A név nem lehet üres");
+        }
+        try {
+            szamlaKeres(szamlaszam);
+            throw new IllegalArgumentException("A megadott számlaszámmal már létezik számla");
+        } catch (HibasSzamlaszamException ex){
+            Szamla sz = new Szamla(nev, szamlaszam);
+            szamlaList.add(sz);
+        }
     }
 
     // Két számla között utal.
@@ -39,13 +60,20 @@ public class Bank {
     // Lekérdezi az adott számlán lévő pénzösszeget
     public long egyenleg(String szamlaszam)
     {
+        Szamla sz = szamlaKeres(szamlaszam);
+        return sz.getEgyenleg();
+    }
+
+    private Szamla szamlaKeres(String szamlaszam){
+        if (szamlaszam.equals("")){
+            throw new IllegalArgumentException("A számlaszám nem lehet üres");
+        }
         Optional<Szamla> optionalSzamla = szamlaList.stream()
                 .filter(szamla -> szamla.szamlaszam.equals(szamlaszam)).findFirst();
         if (optionalSzamla.isEmpty()){
             throw new HibasSzamlaszamException(szamlaszam);
         }
-        Szamla sz = optionalSzamla.get();
-        return sz.getEgyenleg();
+        return optionalSzamla.get();
     }
 
     private class Szamla {
