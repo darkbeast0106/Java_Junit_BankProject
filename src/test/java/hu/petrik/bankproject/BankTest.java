@@ -15,20 +15,40 @@ class BankTest {
     }
 
     @Test
-    void ujSzamlaEgyenlegNulla(){
+    void ujSzamlaEgyenlegNulla() {
         long egyenleg = bank.egyenleg("1234");
         assertEquals(0, egyenleg);
     }
 
     @Test
-    void ujSzamlaEgyenlegFeltoltesMegfeleloEgyenleg(){
+    void ujSzamlaMeglevoSzamlaszammal() {
+        assertThrows(IllegalArgumentException.class, this::segedFuggveny);
+    }
+
+    void segedFuggveny() {
+        bank.ujSzamla("Gipsz Jakab", "1234");
+    }
+
+    @Test
+    void ujSzamlaUresNevvelKivetel() {
+        assertThrows(IllegalArgumentException.class, () -> bank.ujSzamla("", "5678"));
+    }
+
+    @Test
+    void ujSzamlaUresSzamlaszammalKivetel() {
+        assertThrows(IllegalArgumentException.class, () -> bank.ujSzamla("Gipsz Jakab", ""));
+    }
+
+
+    @Test
+    void ujSzamlaEgyenlegFeltoltesMegfeleloEgyenleg() {
         bank.egyenlegFeltolt("1234", 10000);
         long egyenleg = bank.egyenleg("1234");
         assertEquals(10000, egyenleg);
     }
 
     @Test
-    void egyenlegTobbszoriFeltoltesMegfeleloEgyenleg(){
+    void egyenlegTobbszoriFeltoltesMegfeleloEgyenleg() {
         bank.egyenlegFeltolt("1234", 10000);
         assertEquals(10000, bank.egyenleg("1234"));
         bank.egyenlegFeltolt("1234", 20000);
@@ -36,7 +56,7 @@ class BankTest {
     }
 
     @Test
-    void tobbSzamlaFeltoltEgyenlegMegfeleloreKerul(){
+    void tobbSzamlaFeltoltEgyenlegMegfeleloreKerul() {
         bank.ujSzamla("Gipsz Jakab", "5678");
         bank.egyenlegFeltolt("1234", 10000);
         bank.egyenlegFeltolt("1234", 20000);
@@ -44,17 +64,34 @@ class BankTest {
         assertEquals(30000, bank.egyenleg("1234"));
         assertEquals(15000, bank.egyenleg("5678"));
     }
-    @Test
-    void ujSzamlaMeglevoSzamlaszammal(){
-        assertThrows(IllegalArgumentException.class, this::segedFuggveny);
-    }
 
-    void segedFuggveny(){
-        bank.ujSzamla("Gipsz Jakab", "1234");
+    @Test
+    void nemLetezoSzamlaEgyenlegeKivetel() {
+        assertThrows(HibasSzamlaszamException.class, () -> bank.egyenleg("5678"));
     }
 
     @Test
-    void nemLetezoSzamlaEgyenlegeKivetel(){
-        assertThrows(HibasSzamlaszamException.class,() -> bank.egyenleg("5678"));
+    void egyenlegUresSzamlaszamKivetel() {
+        assertThrows(IllegalArgumentException.class, () -> bank.egyenleg(""));
+    }
+
+    @Test
+    void egyenlegFeltoltNemLetezoSzamlszamKivelet() {
+        assertThrows(HibasSzamlaszamException.class, () -> bank.egyenlegFeltolt("5678", 10000));
+    }
+
+    @Test
+    void egyenlegFeltoltUresSzamlszamKivelet() {
+        assertThrows(IllegalArgumentException.class, () -> bank.egyenlegFeltolt("", 10000));
+    }
+
+    @Test
+    void egyenlegFeltoltNullaOsszegKivetel(){
+        assertThrows(IllegalArgumentException.class, () -> bank.egyenlegFeltolt("1234", 0));
+    }
+
+    @Test
+    void egyenlegFeltoltNegativOsszegKivetel(){
+        assertThrows(IllegalArgumentException.class, () -> bank.egyenlegFeltolt("1234", -1000));
     }
 }
